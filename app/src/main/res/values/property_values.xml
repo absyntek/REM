@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="property_kind">
+        <item>Villa</item>
+        <item>House</item>
+        <item>Flat</item>
+        <item>Farm</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="currencys">
+        <item name="dollar">$ Dollars</item>
+        <item name="euro">€ Euros</item>
+    </string-array>
+</resources>
