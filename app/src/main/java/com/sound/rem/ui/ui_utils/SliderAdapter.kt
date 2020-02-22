@@ -39,7 +39,9 @@ class SliderAdapter(private var context : Context, private var images: List<Pict
 
         tvPositionSlider.text = ((position+1).toString() + "/" + images.size.toString())
 
-        Glide.with(view).load(File(uriPhoto.getPath()!!)).into(image)
+        if (images.isNullOrEmpty()) Glide.with(view).load(R.drawable.no_photo).into(image)
+        else Glide.with(view).load(File(uriPhoto.path!!)).into(image)
+
         container.addView(view)
         return view
     }

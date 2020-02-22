@@ -35,9 +35,7 @@ class DescriptionFragment : Fragment() {
 
     private val compositeDisposable = CompositeDisposable()
 
-    companion object{
-        fun newInstance() = DescriptionFragment()
-    }
+    companion object{ fun newInstance() = DescriptionFragment() }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(false)
@@ -46,7 +44,7 @@ class DescriptionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         dbViewModel = ViewModelProvider(activity!!).get(REM_Database_ViewModel::class.java)
-        mapFrag = MapFragment.newInstance(dbViewModel!!)
+        mapFrag = MapFragment.newInstance(dbViewModel)
         childFragmentManager.beginTransaction().replace(R.id.mapContainerDesc,mapFrag).commit()
         super.onViewCreated(view, savedInstanceState)
     }

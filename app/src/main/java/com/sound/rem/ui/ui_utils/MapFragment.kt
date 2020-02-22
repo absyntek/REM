@@ -51,14 +51,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun dataChange(latLng: List<LatLng?>){
-        //TODO Change by list of Property
         this.latLng = latLng
         if (mMap != null){
             addMarkers()
         }
     }
 
-    fun addMarkers(){
+    private fun addMarkers(){
         if (!this.latLng.isNullOrEmpty()) {
             mMap!!.clear()
             latLng!!.forEach {

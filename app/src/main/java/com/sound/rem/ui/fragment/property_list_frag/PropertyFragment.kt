@@ -21,7 +21,6 @@ class PropertyFragment : Fragment(){
 
     private lateinit var dbViewModel: REM_Database_ViewModel
     private lateinit var adapter: PropertyListAdapter
-    private lateinit var allProperty:List<Property>
     private val compositeDisposable = CompositeDisposable()
 
     companion object {
@@ -65,9 +64,8 @@ class PropertyFragment : Fragment(){
             .subscribe {
                 if (it.isNotEmpty()) {
                     dbViewModel.actualProperty.onNext(it[0])
+                    adapter.setPropertys(it)
                 }
-                allProperty = it
-                adapter.setPropertys(it)
             }.addTo(compositeDisposable)
         super.onStart()
     }

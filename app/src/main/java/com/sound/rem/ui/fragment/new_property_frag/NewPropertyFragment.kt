@@ -48,13 +48,13 @@ import kotlin.collections.ArrayList
 class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
 
     private lateinit var dbViewModel: REM_Database_ViewModel
+    private lateinit var thisViewModel: NewPropertyViewModel
     private lateinit var adapterAdresse: DropDownAdapter
     private lateinit var currentPhotoPath: String
     private lateinit var currencys: Array<String>
     private lateinit var mPlace: PlacesClient
     private lateinit var mapFrag: MapFragment
 
-    private var photoList: ArrayList<PictureProp> = arrayListOf()
     private var adresse = emptyList<AutocompletePrediction>()
     private val error = "Required"
     private val REQUEST_TAKE_PHOTO = 1
@@ -63,8 +63,9 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // no Menu needed
         setHasOptionsMenu(false)
-        //getViewModel
+        //getViewModels
         dbViewModel = ViewModelProvider(activity!!).get(REM_Database_ViewModel::class.java)
+        thisViewModel = ViewModelProvider(this).get(NewPropertyViewModel::class.java)
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_new_property, container, false)
     }
@@ -79,6 +80,8 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         setDropdowns()
         setUpButtons()
         setupListenerAdresse()
+        if (thisViewModel.photoList.isNotEmpty()) updateSlider()
+        if (thisViewModel.latLng != null) mapFrag.dataChange(listOf(thisViewModel.latLng))
 
         super.onViewCreated(view, savedInstanceState)
     }
@@ -152,20 +155,20 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-            val isFirst = photoList.isEmpty()
-            val tmpPhoto = PictureProp(currentPhotoPath, -1, isFirst)
-            photoList.add(tmpPhoto)
-            updateSlider(photoList)
+            val tmpPhoto = PictureProp(currentPhotoPath, -1, thisViewModel.photoList.isEmpty())
+            thisViewModel.photoList.add(tmpPhoto)
+            updateSlider()
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun updateSlider(photoList: ArrayList<PictureProp>) {
-        val adapter = SliderAdapter(requireContext(), photoList)
+    private fun updateSlider() {
+        val adapter = SliderAdapter(requireContext(), thisViewModel.photoList)
         viewPagerNewProp.adapter = adapter
+        viewPagerNewProp.currentItem = (thisViewModel.photoList.size - 1)
     }
 
-    fun setUpButtons() {
+    private fun setUpButtons() {
         buttonAddPic.setOnClickListener {
             dispatchTakePictureIntent()
         }
@@ -173,12 +176,12 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         btn_newProperty_Ok.setOnClickListener {
             //removeKeyBoard(btn_newProperty_Ok.windowToken)
             if (verrifyConditions()) {
-                preparToSave()
+                prepareToSave()
             }
         }
     }
 
-    fun verrifyConditions(): Boolean {
+    private fun verrifyConditions(): Boolean {
         var isItOk = true
         if (dropDownKind.text.isEmpty()) {
             etKind.error = error; isItOk = false
@@ -210,10 +213,10 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         return isItOk
     }
 
-    fun preparToSave() {
+    private fun prepareToSave() {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.FRANCE).format(Date())
 
-        val lat: Double?;
+        val lat: Double?
         val lng: Double?
         if (latLng != null) {
             lat = latLng!!.latitude; lng = latLng!!.longitude
@@ -231,7 +234,7 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             lat,
             lng,
             edtPrice.text.toString().toInt(),
-            edtCurrency.text.toString().equals(currencys[0]),
+            edtCurrency.text.toString() == currencys[0],
             edtSurface.text.toString().toInt(),
             edtNbrRoom.text.toString().toInt(),
             timeStamp,
@@ -250,16 +253,17 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             .subscribe()
     }
 
-    fun setPicturs(propertyId: Long) {
-        if (photoList.isNullOrEmpty()){
+    private fun setPicturs(propertyId: Long) {
+        if (thisViewModel.photoList.isNullOrEmpty()){
             setThePropertyToShowAndBack(propertyId)
         }else{
-            photoList.forEach { it.idProperty = propertyId }
-            savePictureToDb(photoList, propertyId)
+            thisViewModel.photoList.forEach { it.idProperty = propertyId }
+            savePictureToDb(thisViewModel.photoList, propertyId)
+
         }
     }
 
-    fun savePictureToDb(toSave: List<PictureProp>, propertyId: Long){
+    private fun savePictureToDb(toSave: List<PictureProp>, propertyId: Long){
         dbViewModel.addPhotos(toSave)
             .subscribeOn(Schedulers.single())
             .observeOn(AndroidSchedulers.mainThread())
@@ -268,24 +272,26 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             .subscribe()
     }
 
-    fun setThePropertyToShowAndBack(propertyId: Long){
+    private fun setThePropertyToShowAndBack(propertyId: Long){
         dbViewModel.getPropertyById(propertyId)
             .subscribeOn(Schedulers.single())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess {
                 dbViewModel.actualProperty.onNext(it)
+                thisViewModel.photoList = arrayListOf()
+                thisViewModel.latLng = null
                 findNavController().navigate(R.id.action_nav_home_to_newProperty)
             }
             .doOnError { showToast(it.message!!) }
             .subscribe()
     }
 
-    fun showToast (message:String){
+    private fun showToast (message:String){
         Toast.makeText(requireContext(),message,Toast.LENGTH_LONG).show()
     }
 
     override fun onItemClick(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-        val splitedAdress = adresse.get(p2).getFullText(null).toString().split(",")
+        val splitedAdress = adresse[p2].getFullText(null).toString().split(",")
 
         if (splitedAdress.size == 3) {
             edtAdresse.text = Editable.Factory.getInstance().newEditable(splitedAdress[0])
@@ -299,17 +305,18 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         }
 
         val placeFields = arrayListOf(Place.Field.ID, Place.Field.LAT_LNG)
-        val request = FetchPlaceRequest.newInstance(adresse.get(p2).placeId, placeFields)
+        val request = FetchPlaceRequest.newInstance(adresse[p2].placeId, placeFields)
 
         removeKeyboard(edtAdresse.windowToken)
 
         mPlace.fetchPlace(request).addOnSuccessListener { response ->
             latLng = response.place.latLng
-            mapFrag.dataChange(listOf(latLng))
+            thisViewModel.latLng = response.place.latLng
+            mapFrag.dataChange(listOf(thisViewModel.latLng))
         }
     }
 
-    fun removeKeyboard(windowToken: IBinder) {
+    private fun removeKeyboard(windowToken: IBinder) {
         val imm =
             requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(windowToken, 0)

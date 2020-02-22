@@ -10,5 +10,5 @@ class PictureProp (
     @PrimaryKey
     var pathPicProp: String,
     var idProperty: Long,
-    var isTopPic: Boolean? = false
+    var isTopPic: Boolean = false
 )

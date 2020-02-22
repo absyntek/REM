@@ -56,12 +56,15 @@ class PropertyListAdapter internal constructor(context: Context, val adapterOnCl
             .doOnError{Log.e(this.toString(), it.message!!)}
             .doOnSuccess {list ->
                 holder.tvNbrPic.text = list.size.toString()
-                list.forEach { if (it.isTopPic!!){
-                    photoUri = Uri.parse(it.pathPicProp)
-                    Glide.with(holder.imgListProperty).load(File(photoUri.path!!)).into(holder.imgListProperty)
+                if (!list.isNullOrEmpty()){
+                        list.forEach {
+                            if (it.isTopPic!!){
+                                photoUri = Uri.parse(it.pathPicProp)
+                                Glide.with(holder.imgListProperty).load(File(photoUri.path!!)).into(holder.imgListProperty)
+                            }
                         }
-                    }
-                }
+                }else Glide.with(holder.imgListProperty).load(R.drawable.no_photo).into(holder.imgListProperty)
+            }
             .subscribe().addTo(compositeDisposable)
 
         holder.itemView.setOnClickListener {
