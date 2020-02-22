@@ -1,14 +1,12 @@
 package com.sound.rem.database.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.sound.rem.models.Property
-import io.reactivex.Maybe
-import io.reactivex.Observable
+import io.reactivex.*
 
 @Dao
 interface PropertyDao {
@@ -17,13 +15,14 @@ interface PropertyDao {
     suspend fun createProperty(property: Property)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun createPropertyForID(property: Property): Maybe<Long>
+    fun createPropertyForID(property: Property): Single<Long>
 
     @Query("SELECT * FROM Property")
-    fun getAllPropertys(): LiveData<List<Property>>
+    fun getAllPropertys(): Flowable<List<Property>>
+
 
     @Query("SELECT * FROM Property WHERE idProperty = :propertyId")
-    fun getProperty(propertyId: Long): Maybe<Property>
+    fun getProperty(propertyId: Long): Single<Property>
 
     @Update
     suspend fun updateProperty(property: Property)

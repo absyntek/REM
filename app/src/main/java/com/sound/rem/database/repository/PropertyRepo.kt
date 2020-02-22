@@ -1,20 +1,19 @@
 package com.sound.rem.database.repository
 
-import androidx.lifecycle.LiveData
 import com.sound.rem.database.dao.PropertyDao
 import com.sound.rem.models.Property
-import io.reactivex.Maybe
-import io.reactivex.Observable
+import io.reactivex.Flowable
+import io.reactivex.Single
 
 class PropertyRepo(private val propertyDAO: PropertyDao){
 
-    val allPropertys : LiveData<List<Property>> = propertyDAO.getAllPropertys()
+    val allPropertys: Flowable<List<Property>> = propertyDAO.getAllPropertys()
 
-    fun create (property: Property) : Maybe<Long> {
+    fun create (property: Property) : Single<Long> {
         return propertyDAO.createPropertyForID(property)
     }
 
-    fun getProperty (propertyId: Long): Maybe<Property>{
+    fun getProperty (propertyId: Long): Single<Property>{
         return propertyDAO.getProperty(propertyId)
     }
 }

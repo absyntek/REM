@@ -3,11 +3,15 @@ package com.sound.rem.database.dao
 import androidx.room.*
 import com.sound.rem.models.PictureProp
 import io.reactivex.Maybe
+import io.reactivex.Single
 
 @Dao
 interface PicturePropDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addPhoto(pictureProp: PictureProp)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun addPhotos(pictureProp: List<PictureProp>): Single<List<Long>>
 
     @Query("SELECT * FROM PictureProp WHERE idProperty = :propertyId")
     fun getPhotos(propertyId:Long): Maybe<List<PictureProp>>

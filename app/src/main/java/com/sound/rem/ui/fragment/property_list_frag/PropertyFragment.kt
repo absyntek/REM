@@ -7,47 +7,74 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.sound.rem.R
+import com.sound.rem.models.Property
 import com.sound.rem.viewmodel.REM_Database_ViewModel
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
 
 
-class PropertyFragment : Fragment() {
+class PropertyFragment : Fragment(){
 
     private lateinit var dbViewModel: REM_Database_ViewModel
+    private lateinit var adapter: PropertyListAdapter
+    private lateinit var allProperty:List<Property>
+    private val compositeDisposable = CompositeDisposable()
 
     companion object {
         fun newInstance() = PropertyFragment()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-
         val view = inflater.inflate(R.layout.fragment_property_list, container, false)
 
         dbViewModel = ViewModelProvider(activity!!).get(REM_Database_ViewModel::class.java)
+        setAdapter(view)
+        return view
+    }
 
+    private fun setAdapter (view: View){
         // Set the adapter
         if (view is RecyclerView){
-            val adapter = PropertyListAdapter(requireContext())
+            adapter = PropertyListAdapter(requireContext(), dbViewModel.listener)
             view.adapter = adapter
 
-            // if orientation screen is land and size 600 so linear = horizontal
-            if (resources.getBoolean(R.bool.isTablet) && resources.getBoolean(R.bool.isLand)){
-                view.layoutManager = LinearLayoutManager(requireContext())
-            }else{
-                view.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
+            // if orientation screen is land so linear = horizontal
+            when {
+                resources.getBoolean(R.bool.isLand) -> {
+                    view.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+                }
+                resources.getBoolean(R.bool.isTablet) -> {
+                    view.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
+                }
+                else -> {
+                    view.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+                }
             }
             adapter.setViewModel(dbViewModel)
-            dbViewModel.allPropertys.observe(this, Observer { propertys ->
-                propertys?.let {
-                    if (it.isNotEmpty()){
-                        dbViewModel.actualProperty.value = it[0]
-                    }
-                    adapter.setPropertys(it)
-                }
-            })
         }
-        return view
+    }
+
+    override fun onStart() {
+        dbViewModel.allPropertys
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                if (it.isNotEmpty()) {
+                    dbViewModel.actualProperty.onNext(it[0])
+                }
+                allProperty = it
+                adapter.setPropertys(it)
+            }.addTo(compositeDisposable)
+        super.onStart()
+    }
+
+    override fun onStop() {
+        compositeDisposable.dispose()
+        compositeDisposable.clear()
+        super.onStop()
     }
 }

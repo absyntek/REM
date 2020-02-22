@@ -1,4 +1,4 @@
-package com.sound.rem.ui.util
+package com.sound.rem.ui.ui_utils
 
 import android.content.Context
 import android.net.Uri
@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.viewpager.widget.PagerAdapter
@@ -14,7 +13,6 @@ import com.bumptech.glide.Glide
 import com.sound.rem.R
 import com.sound.rem.models.PictureProp
 import java.io.File
-import java.net.URI
 
 class SliderAdapter(private var context : Context, private var images: List<PictureProp>) : PagerAdapter(){
 

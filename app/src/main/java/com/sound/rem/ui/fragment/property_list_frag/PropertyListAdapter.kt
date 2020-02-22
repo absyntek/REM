@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -16,17 +17,19 @@ import com.sound.rem.models.Property
 import com.sound.rem.viewmodel.REM_Database_ViewModel
 import io.reactivex.Maybe
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import java.io.File
 
-class PropertyListAdapter internal constructor(context: Context) : RecyclerView.Adapter<PropertyListAdapter.PropertyViewHolder>() {
+class PropertyListAdapter internal constructor(context: Context, val adapterOnClick: OnItemClickListener) : RecyclerView.Adapter<PropertyListAdapter.PropertyViewHolder>() {
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private var propertys = emptyList<Property>() // Cached copy of propertys
     private lateinit var dbViewModel: REM_Database_ViewModel
     private lateinit var photoUri: Uri
-    private lateinit var allPicAsync :Disposable
+    private val compositeDisposable = CompositeDisposable()
 
     inner class PropertyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvPrice: TextView = itemView.findViewById(R.id.tvPrice)
@@ -47,24 +50,22 @@ class PropertyListAdapter internal constructor(context: Context) : RecyclerView.
         holder.tvAdresse.text = current.city
         holder.tvKind.text = current.propertyKind.plus(" . ").plus(current.surface.toString()).plus(" m²")
 
-        allPicAsync = dbViewModel.getAllPics(current.idProperty!!)
-            .subscribeOn(Schedulers.computation())
+        dbViewModel.getAllPics(current.idProperty!!)
+            .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {list ->
-                    holder.tvNbrPic.text = list.size.toString()
-                    list.forEach { if (it.isTopPic!!){
-                        photoUri = Uri.parse(it.pathPicProp)
-                        Glide.with(holder.imgListProperty).load(File(photoUri.path)).into(holder.imgListProperty)
+            .doOnError{Log.e(this.toString(), it.message!!)}
+            .doOnSuccess {list ->
+                holder.tvNbrPic.text = list.size.toString()
+                list.forEach { if (it.isTopPic!!){
+                    photoUri = Uri.parse(it.pathPicProp)
+                    Glide.with(holder.imgListProperty).load(File(photoUri.path!!)).into(holder.imgListProperty)
                         }
                     }
-
-                },{
-                    Log.e("test", it.message!!)
-                })
+                }
+            .subscribe().addTo(compositeDisposable)
 
         holder.itemView.setOnClickListener {
-            dbViewModel.actualProperty.value = current
+            adapterOnClick.onClick(current)
         }
     }
 
@@ -79,8 +80,12 @@ class PropertyListAdapter internal constructor(context: Context) : RecyclerView.
 
     override fun getItemCount() = propertys.size
 
+    interface OnItemClickListener {
+        fun onClick(item: Property)
+    }
+
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        allPicAsync.dispose()
+        compositeDisposable.clear()
         super.onDetachedFromRecyclerView(recyclerView)
     }
 }

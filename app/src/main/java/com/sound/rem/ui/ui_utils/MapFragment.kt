@@ -1,13 +1,11 @@
-package com.sound.rem.ui.util
+package com.sound.rem.ui.ui_utils
 
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
@@ -16,20 +14,13 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.sound.rem.R
-import com.sound.rem.models.Property
 import com.sound.rem.viewmodel.REM_Database_ViewModel
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
 
-    private lateinit var property: Property
     private lateinit var dbViewModel : REM_Database_ViewModel
-    private lateinit var disposable: Disposable
-    private var latLng: LatLng? = null
-
+    private var latLng: List<LatLng?>? = null
     private var mMap: GoogleMap? = null
 
     companion object {
@@ -56,24 +47,29 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap?) {
         this.mMap = map
-        addMarker()
+        addMarkers()
     }
 
-    fun dataChange(latLng: LatLng?){
+    fun dataChange(latLng: List<LatLng?>){
         //TODO Change by list of Property
         this.latLng = latLng
         if (mMap != null){
-            addMarker()
+            addMarkers()
         }
     }
 
-    fun addMarker(){
-        if (this.latLng != null) {
+    fun addMarkers(){
+        if (!this.latLng.isNullOrEmpty()) {
             mMap!!.clear()
-            mMap!!.addMarker(MarkerOptions().position(this.latLng!!).title("Here"))
-            mMap!!.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-            mMap!!.animateCamera(CameraUpdateFactory.zoomIn())
-            mMap!!.animateCamera(CameraUpdateFactory.zoomTo(10F), 2000, null)
+            latLng!!.forEach {
+                if (it != null){
+                    mMap!!.addMarker(MarkerOptions().position(it).title("Here"))
+                    mMap!!.moveCamera(CameraUpdateFactory.newLatLng(it))
+                    mMap!!.animateCamera(CameraUpdateFactory.zoomIn())
+                    mMap!!.animateCamera(CameraUpdateFactory.zoomTo(10F), 2000, null)
+                    //TODO si la lista à plus de 1 entré alors zoom au milieu
+                }
+            }
         }
     }
 

@@ -1,30 +1,28 @@
 package com.sound.rem.viewmodel
 
 import android.app.Application
-import android.text.method.SingleLineTransformationMethod
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.sound.rem.database.REM_Database
 import com.sound.rem.database.repository.PicturePropRepo
 import com.sound.rem.database.repository.PropertyRepo
 import com.sound.rem.models.PictureProp
 import com.sound.rem.models.Property
+import com.sound.rem.ui.fragment.property_list_frag.PropertyListAdapter
+import io.reactivex.Flowable
 import io.reactivex.Maybe
-import io.reactivex.Observable
-import kotlinx.coroutines.launch
+import io.reactivex.Single
+import io.reactivex.subjects.BehaviorSubject
 
 class REM_Database_ViewModel (application: Application) : AndroidViewModel(application) {
+
+    lateinit var listener: PropertyListAdapter.OnItemClickListener
 
     private val propertyRepo: PropertyRepo
     private val picturePropRepo: PicturePropRepo
 
-    lateinit var placesClient:PlacesClient
-
-    val allPropertys : LiveData<List<Property>>
-    val actualProperty = MutableLiveData<Property>()
+    val allPropertys : Flowable<List<Property>>
+    val actualProperty : BehaviorSubject<Property>
 
     init
     {
@@ -34,24 +32,23 @@ class REM_Database_ViewModel (application: Application) : AndroidViewModel(appli
         propertyRepo = PropertyRepo(propertyDao)
         picturePropRepo = PicturePropRepo(picturePropDao)
 
+        actualProperty = BehaviorSubject.create()
         allPropertys = propertyRepo.allPropertys
     }
 
-    fun addProperty(property: Property): Maybe<Long> {
+    fun addProperty(property: Property): Single<Long> {
         return propertyRepo.create(property)
     }
 
-    fun getPropertyById(propertyId: Long): Maybe<Property>{
+    fun getPropertyById(propertyId: Long): Single<Property>{
         return propertyRepo.getProperty(propertyId)
     }
 
-    fun addPhotos(photos:List<PictureProp>) = viewModelScope.launch{
-        photos.forEach{picturePropRepo.addPhoto(it)}
+    fun addPhotos(photos:List<PictureProp>): Single<List<Long>>{
+        return picturePropRepo.addPhotos(photos)
     }
 
     fun getAllPics (propertyId: Long): Maybe<List<PictureProp>>{
         return picturePropRepo.getPhotosProp(propertyId)
     }
-
-
 }

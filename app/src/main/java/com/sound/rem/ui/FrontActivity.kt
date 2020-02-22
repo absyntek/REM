@@ -1,6 +1,5 @@
 package com.sound.rem.ui
 
-import android.R.attr.apiKey
 import android.os.Bundle
 import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +12,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.libraries.places.api.Places
 import com.google.android.material.navigation.NavigationView
 import com.sound.rem.R
 import com.sound.rem.viewmodel.REM_Database_ViewModel
@@ -28,9 +26,8 @@ class FrontActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_front)
+
         dbViewModel = ViewModelProvider(this).get(REM_Database_ViewModel::class.java)
-
-
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)

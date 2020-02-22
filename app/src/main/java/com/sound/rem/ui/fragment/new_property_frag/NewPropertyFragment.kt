@@ -1,22 +1,21 @@
 package com.sound.rem.ui.fragment.new_property_frag
 
 
-import android.app.Activity.INPUT_METHOD_SERVICE
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.MediaStore
 import android.text.Editable
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -31,9 +30,9 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.sound.rem.R
 import com.sound.rem.models.PictureProp
 import com.sound.rem.models.Property
-import com.sound.rem.ui.util.DropDownAdapter
-import com.sound.rem.ui.util.MapFragment
-import com.sound.rem.ui.util.SliderAdapter
+import com.sound.rem.ui.ui_utils.DropDownAdapter
+import com.sound.rem.ui.ui_utils.MapFragment
+import com.sound.rem.ui.ui_utils.SliderAdapter
 import com.sound.rem.utlis.Utils
 import com.sound.rem.viewmodel.REM_Database_ViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -43,32 +42,35 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
 
     private lateinit var dbViewModel: REM_Database_ViewModel
-    lateinit var currentPhotoPath: String
-    lateinit var mPlace: PlacesClient
-    val REQUEST_TAKE_PHOTO = 1
-    var photoList: ArrayList<PictureProp> = arrayListOf()
-    val error:String = "Required"
-    lateinit var adapterAdresse:DropDownAdapter
-    private var adresse = emptyList<AutocompletePrediction>()
-    private lateinit var mapFrag:MapFragment
-    private var latLng: LatLng? = null
-    private lateinit var currencys:Array<String>
+    private lateinit var adapterAdresse: DropDownAdapter
+    private lateinit var currentPhotoPath: String
+    private lateinit var currencys: Array<String>
+    private lateinit var mPlace: PlacesClient
+    private lateinit var mapFrag: MapFragment
 
+    private var photoList: ArrayList<PictureProp> = arrayListOf()
+    private var adresse = emptyList<AutocompletePrediction>()
+    private val error = "Required"
+    private val REQUEST_TAKE_PHOTO = 1
+    private var latLng: LatLng? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        // no Menu needed
         setHasOptionsMenu(false)
+        //getViewModel
+        dbViewModel = ViewModelProvider(activity!!).get(REM_Database_ViewModel::class.java)
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_new_property, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        dbViewModel = ViewModelProvider(this).get(REM_Database_ViewModel::class.java)
         Places.initialize(requireContext(), resources.getString(R.string.google_maps_key))
         mapFrag = MapFragment.newInstance(dbViewModel)
         childFragmentManager.beginTransaction().replace(R.id.mapFragNewProp, mapFrag).commit()
@@ -81,7 +83,7 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    fun setupListenerAdresse(){
+    private fun setupListenerAdresse() {
         edtAdresse.doOnTextChanged { text, _, _, _ ->
             val token = AutocompleteSessionToken.newInstance()
 
@@ -100,21 +102,24 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
 
     }
 
-    private fun setDropdowns (){
+    private fun setDropdowns() {
         // DropDown for kind of property
         val propertyKind = requireContext().resources.getStringArray(R.array.property_kind)
-        val adapterPropertyKind = ArrayAdapter(requireContext(), R.layout.dropdown_menu_popup_item, propertyKind)
+        val adapterPropertyKind =
+            ArrayAdapter(requireContext(), R.layout.dropdown_menu_popup_item, propertyKind)
         dropDownKind.inputType = 0
         dropDownKind.setAdapter(adapterPropertyKind)
 
         // DropDown for currencys
         currencys = requireContext().resources.getStringArray(R.array.currencys)
-        val adapterCurrencys = ArrayAdapter(requireContext(), R.layout.dropdown_menu_popup_item, currencys)
+        val adapterCurrencys =
+            ArrayAdapter(requireContext(), R.layout.dropdown_menu_popup_item, currencys)
         edtCurrency.inputType = 0
         edtCurrency.setAdapter(adapterCurrencys)
 
         val tmp = emptyList<String>()
-        adapterAdresse = DropDownAdapter(requireContext(), R.layout.dropdown_menu_popup_item, tmp, adresse)
+        adapterAdresse =
+            DropDownAdapter(requireContext(), R.layout.dropdown_menu_popup_item, tmp, adresse)
         edtAdresse.onItemClickListener = this
         edtAdresse.setAdapter(adapterAdresse)
     }
@@ -125,7 +130,8 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             takePictureIntent.resolveActivity(requireContext().packageManager)?.also {
                 // Create the File where the photo should go
                 val photoFile: File? = try {
-                    Utils.createImageFile(requireContext()).apply { currentPhotoPath = absolutePath }
+                    Utils.createImageFile(requireContext())
+                        .apply { currentPhotoPath = absolutePath }
                 } catch (ex: IOException) {
                     // Error occurred while creating the File
                     null
@@ -143,10 +149,11 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             }
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             val isFirst = photoList.isEmpty()
-            val tmpPhoto = PictureProp(currentPhotoPath,-1, isFirst)
+            val tmpPhoto = PictureProp(currentPhotoPath, -1, isFirst)
             photoList.add(tmpPhoto)
             updateSlider(photoList)
         }
@@ -158,38 +165,61 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         viewPagerNewProp.adapter = adapter
     }
 
-    fun setUpButtons(){
-        buttonAddPic.setOnClickListener{
+    fun setUpButtons() {
+        buttonAddPic.setOnClickListener {
             dispatchTakePictureIntent()
         }
 
         btn_newProperty_Ok.setOnClickListener {
-            if (verrifyConditions()){
+            //removeKeyBoard(btn_newProperty_Ok.windowToken)
+            if (verrifyConditions()) {
                 preparToSave()
             }
         }
     }
 
-    fun verrifyConditions():Boolean{
+    fun verrifyConditions(): Boolean {
         var isItOk = true
-        if (dropDownKind.text.isEmpty()) { etKind.error=error ; isItOk = false} else  etKind.error=null
-        if (edtSurface.text!!.isEmpty()) { etSurface.error=error ; isItOk = false } else etSurface.error=null
-        if (edtPrice.text!!.isEmpty()) { etPrice.error=error ; isItOk = false }else etPrice.error=null
-        if (edtCurrency.text!!.isEmpty()) { etCurrency.error=error ; isItOk = false }else etCurrency.error=null
-        if (edtNbrRoom.text!!.isEmpty()) { etNbrRoom.error=error ; isItOk = false }else etNbrRoom.error=null
-        if (edtNbrBedRoom.text!!.isEmpty()) { etNbrBedRoom.error=error ; isItOk = false }else etNbrBedRoom.error=null
-        if (edtAdresse.text!!.isEmpty()) { etAdresse.error=error ; isItOk = false }else etAdresse.error=null
-        if (edtCity.text!!.isEmpty()) { etCity.error=error ; isItOk = false }else etCity.error=null
-        if (edtCountry.text!!.isEmpty()) { etCountry.error=error ; isItOk = false }else etCountry.error=null
+        if (dropDownKind.text.isEmpty()) {
+            etKind.error = error; isItOk = false
+        } else etKind.error = null
+        if (edtSurface.text!!.isEmpty()) {
+            etSurface.error = error; isItOk = false
+        } else etSurface.error = null
+        if (edtPrice.text!!.isEmpty()) {
+            etPrice.error = error; isItOk = false
+        } else etPrice.error = null
+        if (edtCurrency.text!!.isEmpty()) {
+            etCurrency.error = error; isItOk = false
+        } else etCurrency.error = null
+        if (edtNbrRoom.text!!.isEmpty()) {
+            etNbrRoom.error = error; isItOk = false
+        } else etNbrRoom.error = null
+        if (edtNbrBedRoom.text!!.isEmpty()) {
+            etNbrBedRoom.error = error; isItOk = false
+        } else etNbrBedRoom.error = null
+        if (edtAdresse.text!!.isEmpty()) {
+            etAdresse.error = error; isItOk = false
+        } else etAdresse.error = null
+        if (edtCity.text!!.isEmpty()) {
+            etCity.error = error; isItOk = false
+        } else etCity.error = null
+        if (edtCountry.text!!.isEmpty()) {
+            etCountry.error = error; isItOk = false
+        } else etCountry.error = null
         return isItOk
     }
 
-    fun preparToSave(){
+    fun preparToSave() {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.FRANCE).format(Date())
 
-        val lat:Double? ;val lng:Double?
-        if (latLng !=null){ lat = latLng!!.latitude ; lng = latLng!!.longitude }
-        else{ lat = null ; lng = null }
+        val lat: Double?;
+        val lng: Double?
+        if (latLng != null) {
+            lat = latLng!!.latitude; lng = latLng!!.longitude
+        } else {
+            lat = null; lng = null
+        }
 
         val property = Property(
             null,
@@ -207,46 +237,81 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             timeStamp,
             null
         )
-        val tmp = dbViewModel.addProperty(property).subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread()).subscribe {
-                setPicturs(it)
+
+        dbViewModel.addProperty(property)
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess { propertyId ->
+                setPicturs(propertyId)
             }
+            .doOnError {
+                showToast(it.message!!)
+            }
+            .subscribe()
     }
 
-    fun setPicturs(propertyId: Long){
-        photoList.forEach {it.idProperty = propertyId}
-        dbViewModel.addPhotos(photoList)
-        findNavController().navigate(R.id.next_action)
+    fun setPicturs(propertyId: Long) {
+        if (photoList.isNullOrEmpty()){
+            setThePropertyToShowAndBack(propertyId)
+        }else{
+            photoList.forEach { it.idProperty = propertyId }
+            savePictureToDb(photoList, propertyId)
+        }
     }
 
+    fun savePictureToDb(toSave: List<PictureProp>, propertyId: Long){
+        dbViewModel.addPhotos(toSave)
+            .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess { setThePropertyToShowAndBack(propertyId) }
+            .doOnError { showToast(it.message!!) }
+            .subscribe()
+    }
+
+    fun setThePropertyToShowAndBack(propertyId: Long){
+        dbViewModel.getPropertyById(propertyId)
+            .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess {
+                dbViewModel.actualProperty.onNext(it)
+                findNavController().navigate(R.id.action_nav_home_to_newProperty)
+            }
+            .doOnError { showToast(it.message!!) }
+            .subscribe()
+    }
+
+    fun showToast (message:String){
+        Toast.makeText(requireContext(),message,Toast.LENGTH_LONG).show()
+    }
 
     override fun onItemClick(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-        edtAdresse.text = Editable.Factory.getInstance().newEditable(adresse.get(p2).getPrimaryText(null))
-        val cityCountry = adresse.get(p2).getSecondaryText(null).toString().split(",")
-        edtCity.text = Editable.Factory.getInstance().newEditable(cityCountry.get(0))
-        edtCountry.text = Editable.Factory.getInstance().newEditable(cityCountry.get(1))
+        val splitedAdress = adresse.get(p2).getFullText(null).toString().split(",")
 
+        if (splitedAdress.size == 3) {
+            edtAdresse.text = Editable.Factory.getInstance().newEditable(splitedAdress[0])
+            edtCity.text = Editable.Factory.getInstance().newEditable(splitedAdress[1])
+            edtCountry.text = Editable.Factory.getInstance().newEditable(splitedAdress[2])
+        } else {
+            // Le Pleynet in France make this exception
+            edtAdresse.text = Editable.Factory.getInstance().newEditable("empty")
+            edtCity.text = Editable.Factory.getInstance().newEditable(splitedAdress[0])
+            edtCountry.text = Editable.Factory.getInstance().newEditable(splitedAdress[1])
+        }
 
         val placeFields = arrayListOf(Place.Field.ID, Place.Field.LAT_LNG)
         val request = FetchPlaceRequest.newInstance(adresse.get(p2).placeId, placeFields)
 
-        val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(edtAdresse.windowToken,0)
+        removeKeyboard(edtAdresse.windowToken)
 
         mPlace.fetchPlace(request).addOnSuccessListener { response ->
             latLng = response.place.latLng
-            mapFrag.dataChange(latLng)
+            mapFrag.dataChange(listOf(latLng))
         }
     }
 
-    override fun onStop() {
-        val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(null,0)
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-
-        super.onDestroy()
+    fun removeKeyboard(windowToken: IBinder) {
+        val imm =
+            requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(windowToken, 0)
     }
 }

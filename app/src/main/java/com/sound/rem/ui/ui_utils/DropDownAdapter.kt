@@ -1,4 +1,4 @@
-package com.sound.rem.ui.util
+package com.sound.rem.ui.ui_utils
 
 import android.content.Context
 import android.graphics.Color
@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.google.android.libraries.places.api.model.AutocompletePrediction
-import com.sound.rem.R
 
 class DropDownAdapter(context: Context,tvId: Int,retString:List<String>, private var adresse : List<AutocompletePrediction>): ArrayAdapter<String>(context,tvId,retString){
 
