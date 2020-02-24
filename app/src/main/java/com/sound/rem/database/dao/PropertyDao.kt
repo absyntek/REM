@@ -1,12 +1,10 @@
 package com.sound.rem.database.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.sound.rem.models.Property
 import io.reactivex.*
+import io.reactivex.subjects.BehaviorSubject
 
 @Dao
 interface PropertyDao {
@@ -32,4 +30,10 @@ interface PropertyDao {
 
     @Query("DELETE FROM Property")
     suspend fun deleteAll()
+
+
+    //Search Query
+
+    @RawQuery
+    fun searchProperty(query:SupportSQLiteQuery): Single<List<Property>>
 }

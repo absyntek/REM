@@ -3,6 +3,7 @@ package com.sound.rem.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.sound.rem.database.REM_Database
 import com.sound.rem.database.repository.PicturePropRepo
 import com.sound.rem.database.repository.PropertyRepo
@@ -23,6 +24,10 @@ class REM_Database_ViewModel (application: Application) : AndroidViewModel(appli
 
     val allPropertys : Flowable<List<Property>>
     val actualProperty : BehaviorSubject<Property>
+    val isDollar: BehaviorSubject<Boolean>
+    val searchResultProperty: BehaviorSubject<List<Property>>
+    var usdEur:Double = 1.08
+    var mapLite:Boolean = true
 
     init
     {
@@ -32,7 +37,10 @@ class REM_Database_ViewModel (application: Application) : AndroidViewModel(appli
         propertyRepo = PropertyRepo(propertyDao)
         picturePropRepo = PicturePropRepo(picturePropDao)
 
+        isDollar = BehaviorSubject.create()
+        isDollar.onNext(true)
         actualProperty = BehaviorSubject.create()
+        searchResultProperty = BehaviorSubject.create()
         allPropertys = propertyRepo.allPropertys
     }
 
@@ -50,5 +58,9 @@ class REM_Database_ViewModel (application: Application) : AndroidViewModel(appli
 
     fun getAllPics (propertyId: Long): Maybe<List<PictureProp>>{
         return picturePropRepo.getPhotosProp(propertyId)
+    }
+
+    fun searchProperty(query: SupportSQLiteQuery):Single<List<Property>>{
+        return propertyRepo.searchProperty(query)
     }
 }

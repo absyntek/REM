@@ -1,9 +1,6 @@
 package com.sound.rem.models
 
 import androidx.room.*
-import com.google.android.gms.maps.model.LatLng
-import java.net.URI
-import java.util.*
 
 @Entity(indices = arrayOf(Index(value = ["idProperty"])))
 class Property
@@ -16,7 +13,7 @@ class Property
      var country:String,
      var lat: Double?,
      var lng:Double?,
-     var price: Int,
+     var price: Long,
      var isDollar: Boolean,
      var surface: Int,
      var nbrRooms: Int,

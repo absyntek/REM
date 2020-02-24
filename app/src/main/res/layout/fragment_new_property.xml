@@ -28,7 +28,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/tmp_05" />
+                    android:src="@drawable/no_photo" />
 
                 <androidx.viewpager.widget.ViewPager
                     android:id="@+id/viewPagerNewProp"

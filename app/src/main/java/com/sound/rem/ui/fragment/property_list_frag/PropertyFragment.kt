@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.sound.rem.R
-import com.sound.rem.models.Property
 import com.sound.rem.viewmodel.REM_Database_ViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -58,15 +57,16 @@ class PropertyFragment : Fragment(){
     }
 
     override fun onStart() {
-        dbViewModel.allPropertys
+        dbViewModel.searchResultProperty
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
+            .doOnNext{
                 if (it.isNotEmpty()) {
                     dbViewModel.actualProperty.onNext(it[0])
                     adapter.setPropertys(it)
                 }
-            }.addTo(compositeDisposable)
+            }
+            .subscribe().addTo(compositeDisposable)
         super.onStart()
     }
 

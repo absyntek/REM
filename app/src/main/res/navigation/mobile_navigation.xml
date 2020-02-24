@@ -20,10 +20,13 @@
         <action
             android:id="@+id/action_nav_home_to_descriptionFragment"
             app:destination="@id/descriptionFragment"
-            app:enterAnim="@anim/slide_in_top"
-            app:exitAnim="@anim/slide_out_bottom"
+            app:enterAnim="@anim/slide_out_right"
+            app:exitAnim="@anim/slide_in_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_nav_home_to_mapFragment"
+            app:destination="@id/mapFragment" />
     </fragment>
 
     <fragment
@@ -49,5 +52,9 @@
         android:name="com.sound.rem.ui.fragment.property_list_frag.PropertyFragment"
         android:label="fragment_property_list"
         tools:layout="@layout/fragment_property_list" />
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.sound.rem.ui.ui_utils.MapFragment"
+        android:label="MapFragment" />
 
 </navigation>

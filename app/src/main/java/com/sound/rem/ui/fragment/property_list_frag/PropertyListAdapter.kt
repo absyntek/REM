@@ -6,19 +6,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.sound.rem.R
-import com.sound.rem.models.PictureProp
 import com.sound.rem.models.Property
+import com.sound.rem.utlis.Utils
 import com.sound.rem.viewmodel.REM_Database_ViewModel
-import io.reactivex.Maybe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import java.io.File
@@ -46,7 +43,21 @@ class PropertyListAdapter internal constructor(context: Context, val adapterOnCl
 
     override fun onBindViewHolder(holder: PropertyViewHolder, position: Int) {
         val current = propertys[position]
-        holder.tvPrice.text = current.price.toString().plus(" €") //TODO check if $ or €
+        dbViewModel.isDollar
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.newThread())
+            .doOnNext{
+
+                val tmp:Long
+                if (current.isDollar && it == false){
+                    tmp = Utils.convertDollarToEuro(current.price, dbViewModel.usdEur)
+                }else if (!current.isDollar && it == true) {
+                    tmp = Utils.convertEuroToDollar(current.price, dbViewModel.usdEur)
+                }else{
+                    tmp = current.price
+                }
+                holder.tvPrice.text = Utils.priceToString(tmp, it)
+            }.subscribe().addTo(compositeDisposable)
         holder.tvAdresse.text = current.city
         holder.tvKind.text = current.propertyKind.plus(" . ").plus(current.surface.toString()).plus(" m²")
 

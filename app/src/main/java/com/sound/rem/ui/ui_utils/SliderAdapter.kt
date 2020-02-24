@@ -16,9 +16,7 @@ import java.io.File
 
 class SliderAdapter(private var context : Context, private var images: List<PictureProp>) : PagerAdapter(){
 
-
     lateinit var layout:LayoutInflater
-
 
     override fun isViewFromObject(view: View, `object`: Any): Boolean{
         return view === `object`
@@ -39,8 +37,7 @@ class SliderAdapter(private var context : Context, private var images: List<Pict
 
         tvPositionSlider.text = ((position+1).toString() + "/" + images.size.toString())
 
-        if (images.isNullOrEmpty()) Glide.with(view).load(R.drawable.no_photo).into(image)
-        else Glide.with(view).load(File(uriPhoto.path!!)).into(image)
+        Glide.with(view).load(File(uriPhoto.path!!)).into(image)
 
         container.addView(view)
         return view

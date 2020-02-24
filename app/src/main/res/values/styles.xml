@@ -32,4 +32,13 @@
         <item name="android:textSize">24sp</item>
     </style>
 
+    <style name="SwitchStyle" parent="Theme.MaterialComponents.Light">
+
+        <item name="android:textColorPrimaryDisableOnly">#b71c1c</item>
+        <item name="colorControlHighlight">#b71c1c</item>
+        <item name="colorControlActivated">#1b5e20</item>
+        <item name="android:colorForeground">#f57f17</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+    </style>
+
 </resources>

@@ -5,16 +5,13 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Environment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FetchPlaceRequest
-import com.google.android.libraries.places.api.net.PlacesClient
 import java.io.File
 import java.io.IOException
 
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToLong
 
 /**
  * Created by Philippe on 21/02/2018.
@@ -40,8 +37,8 @@ object Utils {
      * @param dollars
      * @return
      */
-    fun convertDollarToEuro(dollars: Int): Int {
-        return Math.round(dollars * 0.812).toInt()
+    fun convertDollarToEuro(dollars: Long, usdEur: Double): Long {
+        return (dollars * usdEur).roundToLong()
     }
 
     /**
@@ -49,8 +46,8 @@ object Utils {
      * @param euro
      * @return
      */
-    fun convertEuroToDollar(euro: Int): Int {
-        return Math.round(euro / 0.812).toInt()
+    fun convertEuroToDollar(euro: Long, usdEur: Double): Long {
+        return (euro / usdEur).roundToLong()
     }
 
     /**
@@ -59,7 +56,7 @@ object Utils {
      * @param context
      * @return
      */
-    fun isInternetAvailable(context: Context): Boolean? {
+    fun isInternetAvailable(context: Context): Boolean {
         var result = false
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -97,8 +94,30 @@ object Utils {
         )
     }
 
-    fun priceToShow(price: Int):String{
-        var toReturn = price.toString()
-        return toReturn
+    fun priceToString(price: Long, isDollar:Boolean):String{
+        var strToReturn = ""
+        if (isDollar) strToReturn = "$ $strToReturn"
+        val tmpList = price.toString().splitIgnoreEmpty("")
+        val tmp = tmpList.asReversed().chunked(3)
+        for (i in tmp.indices.reversed()){
+            tmp[i].asReversed().forEach{
+                strToReturn = "$strToReturn$it"
+            }
+            if (i != 0){
+                if (isDollar) {
+                    strToReturn = "$strToReturn,"
+                } else  {
+                    strToReturn = "$strToReturn "
+                }
+            }
+        }
+        if (!isDollar) strToReturn = "$strToReturn €"
+        return strToReturn
+    }
+
+    private fun CharSequence.splitIgnoreEmpty(vararg delimiters: String): List<String> {
+        return this.split(*delimiters).filter {
+            it.isNotEmpty()
+        }
     }
 }

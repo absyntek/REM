@@ -42,7 +42,6 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
@@ -66,14 +65,15 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         //getViewModels
         dbViewModel = ViewModelProvider(activity!!).get(REM_Database_ViewModel::class.java)
         thisViewModel = ViewModelProvider(this).get(NewPropertyViewModel::class.java)
+        dbViewModel.mapLite = true
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_new_property, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        Places.initialize(requireContext(), resources.getString(R.string.google_maps_key))
-        mapFrag = MapFragment.newInstance(dbViewModel)
+        //Places.initialize(requireContext(), resources.getString(R.string.google_maps_key))
+        mapFrag = MapFragment.newInstance()
         childFragmentManager.beginTransaction().replace(R.id.mapFragNewProp, mapFrag).commit()
         mPlace = Places.createClient(requireContext())
 
@@ -81,7 +81,7 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         setUpButtons()
         setupListenerAdresse()
         if (thisViewModel.photoList.isNotEmpty()) updateSlider()
-        if (thisViewModel.latLng != null) mapFrag.dataChange(listOf(thisViewModel.latLng))
+        if (thisViewModel.latLng != null) mapFrag.dataChangeSimpleMap(thisViewModel.latLng)
 
         super.onViewCreated(view, savedInstanceState)
     }
@@ -102,7 +102,6 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
                 adapterAdresse.updateData(adresse)
             }
         }
-
     }
 
     private fun setDropdowns() {
@@ -233,7 +232,7 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
             edtCountry.text.toString(),
             lat,
             lng,
-            edtPrice.text.toString().toInt(),
+            edtPrice.text.toString().toLong(),
             edtCurrency.text.toString() == currencys[0],
             edtSurface.text.toString().toInt(),
             edtNbrRoom.text.toString().toInt(),
@@ -312,7 +311,7 @@ class NewPropertyFragment : Fragment(), AdapterView.OnItemClickListener {
         mPlace.fetchPlace(request).addOnSuccessListener { response ->
             latLng = response.place.latLng
             thisViewModel.latLng = response.place.latLng
-            mapFrag.dataChange(listOf(thisViewModel.latLng))
+            mapFrag.dataChangeSimpleMap(thisViewModel.latLng)
         }
     }
 

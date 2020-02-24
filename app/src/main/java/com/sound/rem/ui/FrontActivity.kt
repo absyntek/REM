@@ -12,8 +12,11 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.libraries.places.api.Places
 import com.google.android.material.navigation.NavigationView
 import com.sound.rem.R
+import com.sound.rem.services.currencys_change.LiveCurrency
+import com.sound.rem.utlis.Utils
 import com.sound.rem.viewmodel.REM_Database_ViewModel
 
 
@@ -28,6 +31,12 @@ class FrontActivity : AppCompatActivity() {
         setContentView(R.layout.activity_front)
 
         dbViewModel = ViewModelProvider(this).get(REM_Database_ViewModel::class.java)
+        Places.initialize(this, resources.getString(R.string.google_maps_key))
+
+        if (Utils.isInternetAvailable(this)){
+
+            LiveCurrency(this, dbViewModel)
+        }
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -39,11 +48,13 @@ class FrontActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home
+                R.id.nav_home,
+                R.id.nav_newProperty
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
